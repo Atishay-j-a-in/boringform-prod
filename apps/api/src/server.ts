@@ -4,7 +4,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import { generateOpenApiDocument, createOpenApiExpressMiddleware } from "trpc-to-openapi";
-import { apiReference } from "@scalar/express-api-reference";
 
 import { serverRouter, createContext } from "@repo/trpc/server";
 
@@ -41,7 +40,7 @@ app.get("/openapi.json", (req, res) => {
 });
 
 logger.debug(`docs: ${env.BASE_URL}${env.PORT}/docs`);
-app.use("/docs", apiReference({ url: "/openapi.json" }));
+
 
 app.use(
   "/api",
