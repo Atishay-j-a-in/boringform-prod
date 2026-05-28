@@ -1,0 +1,1 @@
+ALTER TABLE "forms" ALTER COLUMN "created_at" SET NOT NULL;
