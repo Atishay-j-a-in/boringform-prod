@@ -230,7 +230,7 @@ const RecentForms: FC<RecentFormsProps> = () => {
 
   const handleCopyLink = async (form: Form) => {
     const origin = window.location.origin;
-    const isProtected = form.isProtected ? "t" : "f";
+    const isProtected = form.isProtected
     const shareUrl = `${origin}/get-form?id=${form.id}&isProtected=${isProtected}`;
 
     try {

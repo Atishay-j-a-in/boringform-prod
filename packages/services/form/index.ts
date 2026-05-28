@@ -27,11 +27,11 @@ import {
   getFormAnalyticsInput,
 } from "./model";
 import { TRPCError } from "@trpc/server";
-import crypto from "node:crypto";
+import * as crypto from "node:crypto";
 
 class FormService {
   private generateHash(password: string) {
-    return crypto.hash("sha256", password);
+    return crypto.createHash("sha256").update(password).digest("hex");
   }
 
   // append at last
@@ -68,7 +68,7 @@ class FormService {
         isPublished,
         visibility,
         isProtected,
-        password,
+        password: this.generateHash(password?? ""),
         expiresAt,
       })
       .returning({
