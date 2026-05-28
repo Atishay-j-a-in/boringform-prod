@@ -11,7 +11,7 @@ const defaultCookieOptions: CookieOptions = {
   path: "/",
   httpOnly: true,
   secure: true,
-  sameSite: "strict",
+  sameSite: "none",
   maxAge: ONE_YEAR,
 };
 
