@@ -10,6 +10,18 @@ export const RenderField = ({ field, value, onChange }: Props) => {
   const commonClass =
     "mt-2 h-14 w-full rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none";
 
+  const radioOptions = Array.isArray(field.options)
+    ? field.options
+    : typeof field.placeholder === "string"
+      ? field.placeholder
+          .split(",")
+          .map((option: string) => option.trim())
+          .filter(Boolean)
+      : [];
+
+  const rateMax = typeof field.max === "number" && field.max > 0 ? field.max : 5;
+  const rateValue = typeof value === "string" ? value : "";
+
   return (
     <div className="mb-8">
       <label className="text-lg font-medium text-white">
@@ -61,6 +73,70 @@ export const RenderField = ({ field, value, onChange }: Props) => {
 
           <span className="text-zinc-300">{field.placeholder}</span>
         </div>
+      )}
+
+      {field.type === "boolean" && (
+        <div className="mt-4 flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={Boolean(value)}
+            onChange={(event) => onChange?.(event.target.checked)}
+          />
+
+          <span className="text-zinc-300">{field.placeholder || "Yes"}</span>
+        </div>
+      )}
+
+      {field.type === "radio" && (
+        <div className="mt-4 space-y-3">
+          {radioOptions.length === 0 ? (
+            <p className="text-sm text-zinc-500">No options provided.</p>
+          ) : (
+            radioOptions.map((option: string) => (
+              <label key={option} className="flex items-center gap-3 text-zinc-300">
+                <input
+                  type="radio"
+                  name={`field-${field.id ?? field.label}`}
+                  value={option}
+                  checked={rateValue === option}
+                  onChange={(event) => onChange?.(event.target.value)}
+                />
+                {option}
+              </label>
+            ))
+          )}
+        </div>
+      )}
+
+      {field.type === "rate" && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {Array.from({ length: rateMax }, (_, index) => {
+            const label = String(index + 1);
+            const isActive = rateValue === label;
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() => onChange?.(label)}
+                className={`h-10 w-10 rounded-full border text-sm font-medium ${
+                  isActive
+                    ? "border-pink-400 bg-pink-500/20 text-pink-200"
+                    : "border-white/10 bg-black/40 text-zinc-300"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {field.type === "file" && (
+        <input
+          type="file"
+          className={commonClass}
+          onChange={(event) => onChange?.(event.target.files?.[0]?.name ?? "")}
+        />
       )}
     </div>
   );
