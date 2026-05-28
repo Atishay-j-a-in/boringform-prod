@@ -5,6 +5,7 @@ const envSchema = z.object({
   PORT: z.string().optional(),
   FRONTEND_URL: z.string().default("http://localhost:5173"),
   BASE_URL: z.string().default("http://localhost:8000"),
+  NODE_ENV: z.string().default("development"),
 });
 
 function createEnv(env: NodeJS.ProcessEnv) {

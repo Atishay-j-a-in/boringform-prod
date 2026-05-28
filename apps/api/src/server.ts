@@ -35,12 +35,12 @@ app.get("/health", (req, res) => {
   return res.json({ message: "Streamyst server is healthy", healthy: true });
 });
 
-logger.debug(`openapi.json: ${env.BASE_URL}/openapi.json`);
+logger.debug(`openapi.json: ${env.BASE_URL}${env.PORT}/openapi.json`);
 app.get("/openapi.json", (req, res) => {
   return res.json(openApiDocument);
 });
 
-logger.debug(`docs: ${env.BASE_URL}/docs`);
+logger.debug(`docs: ${env.BASE_URL}${env.PORT}/docs`);
 app.use("/docs", apiReference({ url: "/openapi.json" }));
 
 app.use(
