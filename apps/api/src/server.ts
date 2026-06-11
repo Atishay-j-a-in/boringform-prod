@@ -1,13 +1,16 @@
 import express from "express";
-import { logger } from "@repo/logger";
+import { createLogger } from "@repo/logger";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import { generateOpenApiDocument, createOpenApiExpressMiddleware } from "trpc-to-openapi";
 
 import { serverRouter, createContext } from "@repo/trpc/server";
+import { db } from "@repo/database";
 
 import { env } from "./env";
+
+const logger = createLogger(db);
 
 export const app = express();
 const openApiDocument = generateOpenApiDocument(serverRouter, {

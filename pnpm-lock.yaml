@@ -33,6 +33,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@repo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -288,6 +291,9 @@ importers:
 
   packages/logger:
     dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../database
       winston:
         specifier: ^3.19.0
         version: 3.19.0

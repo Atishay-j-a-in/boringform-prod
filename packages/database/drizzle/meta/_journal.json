@@ -71,6 +71,13 @@
       "when": 1780588682252,
       "tag": "0009_brown_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781197543472,
+      "tag": "0010_brief_betty_ross",
+      "breakpoints": true
     }
   ]
 }

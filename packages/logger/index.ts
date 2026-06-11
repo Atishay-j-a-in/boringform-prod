@@ -1,7 +1,14 @@
 import winston from "winston";
 import { env } from "./env";
+import { DatabaseTransport } from "./transports/database";
 
 type LoggerLevel = "error" | "info" | "debug";
+
+type DrizzleDB = {
+  insert: (table: any) => {
+    values: (row: any) => Promise<any>;
+  };
+};
 
 const level: LoggerLevel = env.LOGGER_LEVEL ?? (env.NODE_ENV === "development" ? "debug" : "error");
 
@@ -18,8 +25,27 @@ const format = isDevelopment
     )
   : winston.format.combine(winston.format.timestamp(), winston.format.json());
 
-export const logger = winston.createLogger({
-  level: level,
-  format: format,
-  transports: [new winston.transports.Console()],
-});
+function createTransports(db?: DrizzleDB) {
+  const transports: winston.transport[] = [new winston.transports.Console()];
+
+  if (db) {
+    transports.push(
+      new DatabaseTransport({
+        db,
+        source: isDevelopment ? "api-dev" : "api",
+      }) as unknown as winston.transport,
+    );
+  }
+
+  return transports;
+}
+
+export function createLogger(db?: DrizzleDB) {
+  return winston.createLogger({
+    level,
+    format,
+    transports: createTransports(db),
+  });
+}
+
+export const logger = createLogger();
