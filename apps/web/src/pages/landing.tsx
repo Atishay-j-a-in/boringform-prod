@@ -5,7 +5,6 @@ import LandingHero from "../components/landing/landing-hero";
 import FeaturesSection from "../components/landing/featureSec";
 import AboutSection from "../components/landing/aboutSec";
 import ReviewsSection from "~/components/landing/review-sec";
-import { Sparkles, Wand2, ShieldCheck, Zap } from "lucide-react";
 import PricingSection from "~/components/landing/pricing-sec";
 interface LandingPageProps {
   onCreateForm?: () => void;
@@ -17,7 +16,7 @@ const LandingPage: FC<LandingPageProps> = ({ onCreateForm, onSeeTemplates }) => 
 
   // Keep the health query if needed
   const { status } = trpc.health.getHealth.useQuery();
-
+  console.log("API Health Status:", status);
   const handleCreateForm =
     onCreateForm ||
     (() => {

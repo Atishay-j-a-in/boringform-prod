@@ -76,7 +76,6 @@ export const useGetFormByFormId = (params: { formId: string; password?: string }
     enabled: !!params?.formId,
     retry: false,
   });
-
   return {
     form: query.data,
     isLoading: query.isLoading,

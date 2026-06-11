@@ -270,6 +270,7 @@ class FormService {
         placeholder: fieldsTable.placeholder,
         isRequired: fieldsTable.isRequired,
         type: fieldsTable.type,
+        options: fieldsTable.options,
       })
       .from(fieldsTable)
       .where(eq(fieldsTable.formId, formId))

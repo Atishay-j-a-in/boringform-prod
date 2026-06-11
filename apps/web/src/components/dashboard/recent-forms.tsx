@@ -48,6 +48,7 @@ interface AddFieldState {
   type: FieldType;
   placeholder: string;
   isRequired: boolean;
+  options: Array<{ label: string }>;
 }
 
 interface UpdateFormState {
@@ -64,7 +65,10 @@ const defaultField: AddFieldState = {
   type: "text",
   placeholder: "",
   isRequired: false,
+  options: [],
 };
+
+const hasOptions = (type: FieldType) => type === "radio" || type === "checkbox";
 
 const createDefaultUpdateFormState = (form: Form): UpdateFormState => {
   const expiresAt = form.expiresAt ? new Date(form.expiresAt).toISOString().slice(0, 16) : "";
@@ -111,7 +115,7 @@ const RecentForms: FC<RecentFormsProps> = () => {
 
   const [password, setPassword] = useState("");
 
-  const [fieldData, setFieldData] = useState<AddFieldState>(defaultField);
+  const [fieldsToAdd, setFieldsToAdd] = useState<AddFieldState[]>([{ ...defaultField }]);
 
   const { fields, refetch: refetchFields } = useGetFieldsByFormId(selectedFormId ?? "");
 
@@ -149,20 +153,31 @@ const RecentForms: FC<RecentFormsProps> = () => {
   const handleAddField = async () => {
     if (!selectedFormId) return;
 
+    const validFields = fieldsToAdd
+      .filter((f) => {
+        if (f.label.trim() === "") return false;
+        if (hasOptions(f.type)) {
+          return f.options.length > 0 && f.options.every((o) => o.label.trim() !== "");
+        }
+        return true;
+      })
+      .map((f) => ({
+        label: f.label,
+        type: f.type,
+        placeholder: f.placeholder,
+        isRequired: f.isRequired,
+        ...(hasOptions(f.type) ? { options: f.options } : {}),
+      }));
+
+    if (validFields.length === 0) return;
+
     try {
       await addFields({
         formId: selectedFormId,
-        fields: [
-          {
-            label: fieldData.label,
-            type: fieldData.type,
-            placeholder: fieldData.placeholder,
-            isRequired: fieldData.isRequired,
-          },
-        ],
+        fields: validFields,
       });
 
-      setFieldData(defaultField);
+      setFieldsToAdd([{ ...defaultField }]);
 
       setShowAddFieldModal(false);
 
@@ -170,6 +185,54 @@ const RecentForms: FC<RecentFormsProps> = () => {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const updateFieldAtIndex = (index: number, updates: Partial<AddFieldState>) => {
+    setFieldsToAdd((prev) =>
+      prev.map((f, i) => (i === index ? { ...f, ...updates } : f)),
+    );
+  };
+
+  const addNewFieldRow = () => {
+    setFieldsToAdd((prev) => [...prev, { ...defaultField }]);
+  };
+
+  const removeFieldAtIndex = (index: number) => {
+    setFieldsToAdd((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const addOptionToField = (fieldIndex: number) => {
+    setFieldsToAdd((prev) =>
+      prev.map((f, i) =>
+        i === fieldIndex ? { ...f, options: [...f.options, { label: "" }] } : f,
+      ),
+    );
+  };
+
+  const updateFieldOption = (fieldIndex: number, optionIndex: number, label: string) => {
+    setFieldsToAdd((prev) =>
+      prev.map((f, i) =>
+        i === fieldIndex
+          ? {
+              ...f,
+              options: f.options.map((o, oi) => (oi === optionIndex ? { label } : o)),
+            }
+          : f,
+      ),
+    );
+  };
+
+  const removeFieldOption = (fieldIndex: number, optionIndex: number) => {
+    setFieldsToAdd((prev) =>
+      prev.map((f, i) =>
+        i === fieldIndex
+          ? { ...f, options: f.options.filter((_, oi) => oi !== optionIndex) }
+          : f,
+      ),
+    );
   };
 
   const handleDeleteField = async (fieldId: string) => {
@@ -442,83 +505,146 @@ const RecentForms: FC<RecentFormsProps> = () => {
 
       {showAddFieldModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-zinc-950 p-8">
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl border border-white/10 bg-zinc-950 p-8">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Add Field</h2>
+              <h2 className="text-xl font-semibold text-white">Add Fields</h2>
 
-              <button onClick={() => setShowAddFieldModal(false)}>
+              <button onClick={() => { setShowAddFieldModal(false); setFieldsToAdd([{ ...defaultField }]); }}>
                 <X className="text-white" />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <input
-                placeholder="Field Label"
-                value={fieldData.label}
-                onChange={(e) =>
-                  setFieldData((prev) => ({
-                    ...prev,
-                    label: e.target.value,
-                  }))
-                }
-                className="w-full rounded-2xl border border-white/10 bg-black px-4 py-4 text-white outline-none"
-              />
+            <div className="space-y-6">
+              {fieldsToAdd.map((field, index) => (
+                <div key={index} className="rounded-2xl border border-white/10 p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-gray-400">Field {index + 1}</p>
+                    {fieldsToAdd.length > 1 && (
+                      <button
+                        onClick={() => removeFieldAtIndex(index)}
+                        className="rounded-lg bg-red-500/20 p-1.5 text-red-300 transition-all hover:bg-red-500/30"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
 
-              <select
-                value={fieldData.type}
-                onChange={(e) =>
-                  setFieldData((prev) => ({
-                    ...prev,
-                    type: e.target.value as FieldType,
-                  }))
-                }
-                className="w-full rounded-2xl border border-white/10 bg-black px-4 py-4 text-white outline-none"
+                  <input
+                    placeholder="Field Label"
+                    value={field.label}
+                    onChange={(e) => updateFieldAtIndex(index, { label: e.target.value })}
+                    className="w-full rounded-2xl border border-white/10 bg-black px-4 py-4 text-white outline-none"
+                  />
+
+                  <select
+                    value={field.type}
+                    onChange={(e) => {
+                      const newType = e.target.value as FieldType;
+                      const updates: Partial<AddFieldState> = { type: newType };
+                      if (hasOptions(newType) && field.options.length === 0) {
+                        updates.options = [{ label: "" }];
+                      } else if (!hasOptions(newType)) {
+                        updates.options = [];
+                      }
+                      updateFieldAtIndex(index, updates);
+                    }}
+                    className="w-full rounded-2xl border border-white/10 bg-black px-4 py-4 text-white outline-none"
+                  >
+                    <option value="text">Text</option>
+                    <option value="radio">Radio</option>
+                    <option value="boolean">Boolean</option>
+                    <option value="date">Date</option>
+                    <option value="email">Email</option>
+                    <option value="number">Number</option>
+                    <option value="rate">Rate</option>
+                    <option value="checkbox">Checkbox</option>
+                    <option value="tel">Telephone</option>
+                    <option value="file">File</option>
+                    <option value="textarea">Textarea</option>
+                  </select>
+
+                  <input
+                    placeholder="Placeholder"
+                    value={field.placeholder}
+                    onChange={(e) => updateFieldAtIndex(index, { placeholder: e.target.value })}
+                    className="w-full rounded-2xl border border-white/10 bg-black px-4 py-4 text-white outline-none"
+                  />
+
+                  <label className="flex items-center gap-3 text-white">
+                    <input
+                      type="checkbox"
+                      checked={field.isRequired}
+                      onChange={(e) => updateFieldAtIndex(index, { isRequired: e.target.checked })}
+                    />
+                    Required Field
+                  </label>
+
+                  {hasOptions(field.type) && (
+                    <div className="space-y-3 rounded-2xl border border-white/5 bg-white/5 p-3">
+                      <p className="text-xs font-medium text-gray-400">Options</p>
+                      {field.options.map((opt, optIdx) => (
+                        <div key={optIdx} className="flex items-center gap-2">
+                          <input
+                            placeholder={`Option ${optIdx + 1}`}
+                            value={opt.label}
+                            onChange={(e) => updateFieldOption(index, optIdx, e.target.value)}
+                            className="flex-1 rounded-xl border border-white/10 bg-black px-3 py-2.5 text-sm text-white outline-none"
+                          />
+                          {field.options.length > 1 && (
+                            <button
+                              onClick={() => removeFieldOption(index, optIdx)}
+                              className="rounded-lg bg-red-500/20 p-1.5 text-red-300 transition-all hover:bg-red-500/30"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => addOptionToField(index)}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 py-2 text-xs text-gray-400 transition-all hover:border-white/30 hover:text-white"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add Option
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <button
+                onClick={addNewFieldRow}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-white/20 py-4 text-sm text-gray-400 transition-all hover:border-white/40 hover:text-white"
               >
-                <option value="text">Text</option>
-                <option value="radio">Radio</option>
-                <option value="boolean">Boolean</option>
-                <option value="date">Date</option>
-                <option value="email">Email</option>
-                <option value="number">Number</option>
-                <option value="rate">Rate</option>
-                <option value="checkbox">Checkbox</option>
-                <option value="tel">Telephone</option>
-                <option value="file">File</option>
-                <option value="textarea">Textarea</option>
-              </select>
-
-              <input
-                placeholder="Placeholder"
-                value={fieldData.placeholder}
-                onChange={(e) =>
-                  setFieldData((prev) => ({
-                    ...prev,
-                    placeholder: e.target.value,
-                  }))
-                }
-                className="w-full rounded-2xl border border-white/10 bg-black px-4 py-4 text-white outline-none"
-              />
-
-              <label className="flex items-center gap-3 text-white">
-                <input
-                  type="checkbox"
-                  checked={fieldData.isRequired}
-                  onChange={(e) =>
-                    setFieldData((prev) => ({
-                      ...prev,
-                      isRequired: e.target.checked,
-                    }))
-                  }
-                />
-                Required Field
-              </label>
+                <Plus className="h-4 w-4" />
+                Add Another Field
+              </button>
             </div>
 
             <button
               onClick={handleAddField}
-              className="mt-6 w-full rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 px-6 py-4 font-semibold text-white"
+              disabled={fieldsToAdd.every((f) => {
+                if (f.label.trim() === "") return true;
+                if (hasOptions(f.type)) {
+                  return f.options.length === 0 || f.options.some((o) => o.label.trim() === "");
+                }
+                return false;
+              })}
+              className="mt-6 w-full rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 px-6 py-4 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Add Field
+              Add {fieldsToAdd.filter((f) => {
+                if (f.label.trim() === "") return false;
+                if (hasOptions(f.type)) {
+                  return f.options.length > 0 && f.options.every((o) => o.label.trim() !== "");
+                }
+                return true;
+              }).length || ""} Field{fieldsToAdd.filter((f) => {
+                if (f.label.trim() === "") return false;
+                if (hasOptions(f.type)) {
+                  return f.options.length > 0 && f.options.every((o) => o.label.trim() !== "");
+                }
+                return true;
+              }).length !== 1 ? "s" : ""}
             </button>
           </div>
         </div>

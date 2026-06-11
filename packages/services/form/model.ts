@@ -60,6 +60,7 @@ export const addFieldsToFormInput = z.object({
       z.object({
         label: z.string().describe("Label of the field"),
         type: z.enum(fieldTypeEnum.enumValues).describe("Type of the field accepted"),
+        options:z.array(z.object({ label: z.string() })).describe("Options for the field if the type is radio, checkbox or select").optional(),
         description: z.string().describe("Description of the field").optional(),
         placeholder: z.string().describe("Placeholder of the field").optional(),
         isRequired: z.boolean().describe("Whether the field is required or not").default(false),

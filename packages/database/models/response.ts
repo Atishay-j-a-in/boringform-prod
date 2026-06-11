@@ -3,9 +3,6 @@ import {
   uuid,
   varchar,
   timestamp,
-  boolean,
-  text,
-  pgEnum,
   json,
 } from "drizzle-orm/pg-core";
 import { formsTable } from "./form";

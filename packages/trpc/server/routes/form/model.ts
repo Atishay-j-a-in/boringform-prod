@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { optional, z } from "zod";
 import { fieldTypeEnum } from "../../../../database/models/field";
 import { updateFormInput, updateFieldInput } from "../../../../services/form/model";
 
@@ -62,6 +62,7 @@ export const getFormByFormIdOutputModel = z.object({
       isRequired: z.boolean().describe("Whether the field is required").nullable(),
       placeholder: z.string().describe("Placeholder for the field").nullable(),
       description: z.string().describe("Description of the field").nullable(),
+      options: z.array(z.object({ label: z.string() })).describe("Options for the field if the type is radio, checkbox or select").nullable(),
     }),
   ),
 });
@@ -102,6 +103,7 @@ export const addFieldToFormInputModel = z.object({
       z.object({
         label: z.string().describe("Label of the field"),
         type: z.enum(fieldTypeEnum.enumValues).describe("Type of the field accepted"),
+        options: z.array(z.object({ label: z.string() })).describe("Options for the field if the type is radio, checkbox or select").optional(),
         description: z.string().describe("Description of the field").optional(),
         placeholder: z.string().describe("Placeholder of the field").optional(),
         isRequired: z.boolean().describe("Whether the field is required or not").default(false),
@@ -131,6 +133,7 @@ export const getFieldsByFormIdOutputModel = z.array(
     placeholder: z.string().describe("Placeholder for the field").nullable(),
     isRequired: z.boolean().describe("Whether the field is required").nullable(),
     type: z.enum(fieldTypeEnum.enumValues).describe("Type of the field accepted"),
+    options: z.array(z.object({ label: z.string() })).describe("Options for the field if the type is radio, checkbox or select").nullable(),
   }),
 );
 

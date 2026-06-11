@@ -8,9 +8,11 @@ import {
   pgEnum,
   numeric,
   unique,
+  json,
 } from "drizzle-orm/pg-core";
 import { formsTable } from "../models/form";
 import { relations } from "drizzle-orm";
+
 
 export const fieldTypeEnum = pgEnum("field_type", [
   "text",
@@ -26,6 +28,10 @@ export const fieldTypeEnum = pgEnum("field_type", [
   "textarea",
 ]);
 
+export interface Option{
+  label: string;
+}
+export type Options=Option[];
 export const fieldsTable = pgTable(
   "fields",
   {
@@ -43,6 +49,7 @@ export const fieldsTable = pgTable(
     index: numeric("index", { scale: 2 }).notNull(),
 
     type: fieldTypeEnum().notNull(),
+    options: json("options").$type<Options>(),
   },
   (table) => {
     return {

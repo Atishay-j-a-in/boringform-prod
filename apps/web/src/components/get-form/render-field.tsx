@@ -10,13 +10,14 @@ export const RenderField = ({ field, value, onChange }: Props) => {
   const commonClass =
     "mt-2 h-14 w-full rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none";
 
-  const radioOptions = Array.isArray(field.options)
-    ? field.options
+  const radioOptions: Array<{ label: string }> = Array.isArray(field.options)
+    ? field.options.map((opt: any) => (typeof opt === "string" ? { label: opt } : opt))
     : typeof field.placeholder === "string"
       ? field.placeholder
           .split(",")
           .map((option: string) => option.trim())
           .filter(Boolean)
+          .map((label: string) => ({ label }))
       : [];
 
   const rateMax = typeof field.max === "number" && field.max > 0 ? field.max : 5;
@@ -64,14 +65,37 @@ export const RenderField = ({ field, value, onChange }: Props) => {
       )}
 
       {field.type === "checkbox" && (
-        <div className="mt-4 flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={Boolean(value)}
-            onChange={(event) => onChange?.(event.target.checked)}
-          />
-
-          <span className="text-zinc-300">{field.placeholder}</span>
+        <div className="mt-4 space-y-3">
+          {radioOptions.length === 0 ? (
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={Boolean(value)}
+                onChange={(event) => onChange?.(event.target.checked)}
+              />
+              <span className="text-zinc-300">{field.placeholder || "Yes"}</span>
+            </div>
+          ) : (
+            radioOptions.map((option: { label: string }) => {
+              const selected = typeof value === "string" ? value.split(",").filter(Boolean) : [];
+              const isChecked = selected.includes(option.label);
+              return (
+                <label key={option.label} className="flex items-center gap-3 text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => {
+                      const next = isChecked
+                        ? selected.filter((v) => v !== option.label)
+                        : [...selected, option.label];
+                      onChange?.(next.join(","));
+                    }}
+                  />
+                  {option.label}
+                </label>
+              );
+            })
+          )}
         </div>
       )}
 
@@ -92,16 +116,16 @@ export const RenderField = ({ field, value, onChange }: Props) => {
           {radioOptions.length === 0 ? (
             <p className="text-sm text-zinc-500">No options provided.</p>
           ) : (
-            radioOptions.map((option: string) => (
-              <label key={option} className="flex items-center gap-3 text-zinc-300">
+            radioOptions.map((option: { label: string }) => (
+              <label key={option.label} className="flex items-center gap-3 text-zinc-300">
                 <input
                   type="radio"
                   name={`field-${field.id ?? field.label}`}
-                  value={option}
-                  checked={rateValue === option}
+                  value={option.label}
+                  checked={rateValue === option.label}
                   onChange={(event) => onChange?.(event.target.value)}
                 />
-                {option}
+                {option.label}
               </label>
             ))
           )}
