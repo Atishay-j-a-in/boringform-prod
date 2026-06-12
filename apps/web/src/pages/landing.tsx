@@ -6,6 +6,8 @@ import FeaturesSection from "../components/landing/featureSec";
 import AboutSection from "../components/landing/aboutSec";
 import ReviewsSection from "~/components/landing/review-sec";
 import PricingSection from "~/components/landing/pricing-sec";
+import { api } from "~/trpc/server";
+
 interface LandingPageProps {
   onCreateForm?: () => void;
   onSeeTemplates?: () => void;
@@ -15,8 +17,8 @@ const LandingPage: FC<LandingPageProps> = ({ onCreateForm, onSeeTemplates }) => 
   const navigate = useNavigate();
 
   // Keep the health query if needed
-  const { status } = trpc.health.getHealth.useQuery();
-  console.log("API Health Status:", status);
+  const result = api.health.getHealth.query();
+  result.then(console.log).catch(console.error);
   const handleCreateForm =
     onCreateForm ||
     (() => {

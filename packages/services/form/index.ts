@@ -275,7 +275,7 @@ class FormService {
       .from(fieldsTable)
       .where(eq(fieldsTable.formId, formId))
       .orderBy(asc(fieldsTable.index));
-
+      
     if (!result || result.length === 0) {
       throw new TRPCError({ code: "NOT_FOUND", message: "No fields found for this form" });
     }

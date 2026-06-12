@@ -1,3 +1,4 @@
+import Transport from "winston-transport";
 import { logsTable } from "@repo/database/models/log";
 
 type DrizzleDB = {
@@ -11,17 +12,17 @@ type DrizzleDB = {
   };
 };
 
-interface DatabaseTransportOptions {
+interface DatabaseTransportOptions extends Transport.TransportStreamOptions {
   db: DrizzleDB;
   source?: string;
 }
 
-export class DatabaseTransport {
-  public level = "silly";
+export class DatabaseTransport extends Transport {
   private db: DrizzleDB;
   private source: string;
 
   constructor(opts: DatabaseTransportOptions) {
+    super(opts);
     this.db = opts.db;
     this.source = opts.source ?? "api";
   }
